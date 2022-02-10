@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title> Chat App</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js">
+  </script>
+
+
+
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+<div class="jumbotron">
+  <div class="input-group mb-3">
+    <div class="input-group-prepend">
+      <label class="input-group-text" for="inputGroupSelect01">Rooms</label>
+    </div>
+    <select class="custom-select" id ="room" id="inputGroupSelect01" >
+      <option selected>Choose...</option>
+      <option value="Java">Java</option>
+      <option value="Covid">Covid</option>
+      <option value="News">News</option>
+    </select>
+  </div>
+    <div class="jumbotron">
+      <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-sm">name</span>
+        </div>
+        <input type="text" id="from_user" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
+      </div>
+        
+        <div class="jumbotron">
+          <div class="input-group input-group-sm mb-3">
+            <div class="input-group-prepend">
+              <span class="input-group-text" id="inputGroup-sizing-sm">Message</span>
+            </div>
+            <input type="text" id="message" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
+          </div>
+          <div class="jumbotron">
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text" id="inputGroup-sizing-sm">Date</span>
+              </div>
+              <input type="date" id ="date_sent" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
+            </div>
+            <button type="button" id="send" class="btn btn-success">Send</button>
+          </div>
+    <div id="messages">
+
+    </div>
+</div>
+<script>
+  
+
+   var socket = io();
+   socket.on("connect", () => {
+        console.log(socket.id); 
+    });
+
+    $(() => {
+        $("#send").click(()=>{
+            sendMessage({from_user: $("#from_user").val(), message: $("#message").val(),
+            room: $("#room").val(), date_sent: $("#date_sent").val()
+          });
+        })
+
+        getMessages()
+    })
+ 
+    socket.on('message', addMessages)
+
+    function addMessages(message){
+        $("#messages").append(`<h4> ${message.from_user} sent  </h4> <p> ${message.message} </p>
+        <p>  from ${message.room}  group to all </p>
+        `)
+    }
+
+    function getMessages(){
+      $.get('http://localhost:8082/messages', (data) => {
+        data.forEach(addMessages);
+      })
+    }
+
+    function sendMessage(message){
+      $.post('http://localhost:8082/messages', message)
+    }
+     function sendMessage() {
+        var msg = document.getElementById('message').value
+
+        var roomName = document.getElementById('room').value
+      
+          msg = {
+            room: roomName,
+            message: document.getElementById('message').value
+          }
+          client.emit('room_message', msg)
+          addMessage(document.getElementById('message').value)
+        }
+
+     
+
+        var roomName = document.getElementById('room').value
+        client.emit('join', roomName)
+    
+  //Message from all other clients
+  client.on('newMessage', (msg) => {
+    const data = `<b>${msg.sender}:</b> ${msg.message}`
+    addMessage(data)
+  })
+  
+    $(function () {
+      var socket = io.connect('http://localhost:8082');
+    });
+    ///
+    $(function () {
+        var socket = io.connect('http://localhost:8082');
+      });
+
+      $(function () {
+        var socket = io.connect('http://localhost:8082');
+        var message = $("#message");
+        var username = $("#from_user");
+
+        var chatroom = $("#room");
+
+        send.click(function () {
+          socket.emit('new_message', { message: message.val() });
+        });
+
+        socket.on("new_message", function (data) {
+          console.log(data);
+          chatroom.append("<p class='message'>"
+            + data.username + ";" + data.message + "</p>")
+        });
+
+        send.click(function () {
+          console.log(username.val())
+          socket.emit('messages',
+            { username: username.val() })
+        });
+      });
+
+</script>
+<script src="http://code.jquery.com/jquery-latest.min.js">
+</script>
+</body>
+</html>
